@@ -1,0 +1,17 @@
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  color: #39362f;
+  background: #fbf9f5;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --background: #fbf9f5;
+  --surface: #ffffff;
+  --ink: #39362f;
+  --muted: #8c887f;
+  --brand: #e96c49;
+  --brand-hover: #d65b39;
+  --brand-pale: #fff2e9;
+  --border: #eeeae2;
+  --radius: 14px;
+}

@@ -1,0 +1,100 @@
+.result-page {
+  width: min(100% - 32px, 640px);
+  margin: 42px auto 60px;
+  min-height: 65vh;
+}
+
+.result-card {
+  background: white;
+  border: 1px solid var(--border);
+  padding: 32px;
+  border-radius: 24px;
+  text-align: center;
+}
+
+.result-card h1 {
+  font-size: 25px;
+  line-height: 1.6;
+  margin: 16px 0 8px;
+}
+
+.result-subtitle {
+  color: #8f8576;
+  font-size: 12px;
+  margin: 0 0 24px;
+}
+
+.result-subtitle span {
+  margin: 0 7px;
+  color: #b0a18c;
+}
+
+.result-image-button {
+  display: block;
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: none;
+  border-radius: 16px;
+  overflow: hidden;
+  width: min(100%, 370px);
+  margin: auto;
+}
+
+.result-image-button img {
+  width: 100%;
+  display: block;
+}
+
+.result-image-button > span {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  bottom: 12px;
+  right: 12px;
+  background: #ffffffed;
+  font-size: 11px;
+  padding: 7px 10px;
+  border-radius: 20px;
+}
+
+.mock-result-note {
+  margin: 17px auto;
+  max-width: 350px;
+  font-size: 12px;
+  color: #998a73;
+  line-height: 1.8;
+}
+
+.result-save {
+  display: flex;
+  width: min(100%, 370px);
+  margin: 20px auto 14px;
+}
+
+.result-error {
+  padding: 35px 0;
+}
+
+.result-error > svg {
+  color: #cda78b;
+}
+
+.result-error p {
+  color: #988975;
+  font-size: 13px;
+  line-height: 1.9;
+}
+
+@media (max-width: 700px) {
+  .result-page {
+    margin-top: 30px;
+  }
+  .result-card {
+    padding: 28px 20px;
+  }
+  .result-card h1 {
+    font-size: 21px;
+  }
+}

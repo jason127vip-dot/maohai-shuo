@@ -1,0 +1,135 @@
+.site-header {
+  max-width: 1176px;
+  padding: 24px 32px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 850;
+  font-size: 23px;
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+
+.brand-mark {
+  width: 37px;
+  height: 39px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 13px;
+  background: var(--brand);
+  color: #fff8ed;
+  transform: rotate(-7deg);
+}
+
+.brand-dot {
+  color: var(--brand);
+  margin-left: 1px;
+}
+
+.header-note {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #9b9489;
+  font-size: 12px;
+}
+
+.header-note svg {
+  color: #cc9c86;
+}
+
+.header-tag {
+  font-size: 12px;
+  color: #8a8171;
+  padding: 7px 11px;
+  border-radius: 7px;
+  background: #f2eee5;
+}
+
+.demo-banner {
+  max-width: 1112px;
+  margin: 13px auto -16px;
+  font-size: 12px;
+  color: #9b8d79;
+  text-align: right;
+}
+
+.site-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  max-width: 1112px;
+  margin: 0 auto;
+  padding: 22px 0 30px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: #a8a092;
+}
+
+.footer-divider {
+  margin: 0 10px;
+}
+
+.site-footer a:hover {
+  color: var(--brand);
+}
+
+@media (max-width: 1100px) {
+  .site-footer {
+    margin-right: 32px;
+    margin-left: 32px;
+  }
+  .demo-banner {
+    margin-right: 32px;
+  }
+}
+
+@media (max-width: 900px) and (min-width: 701px) {
+  .header-note {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .site-header {
+    padding: 18px 22px;
+  }
+  .brand {
+    font-size: 21px;
+  }
+  .brand-mark {
+    width: 33px;
+    height: 35px;
+  }
+  .header-note {
+    display: none;
+  }
+  .header-tag {
+    font-size: 11px;
+    padding: 6px 8px;
+  }
+  .demo-banner {
+    text-align: center;
+    margin: 12px 12px -10px;
+    font-size: 11px;
+  }
+  .site-footer {
+    flex-direction: column;
+    gap: 10px;
+    margin: 0 24px;
+    padding: 22px 0 calc(25px + env(safe-area-inset-bottom));
+    font-size: 11px;
+    text-align: center;
+  }
+}

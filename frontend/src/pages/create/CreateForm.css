@@ -1,0 +1,151 @@
+.small-kicker {
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 1.6px;
+  color: #b0a18c;
+}
+
+.credit-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  font-size: 11px;
+  color: #ba8654;
+  background: #fbf3e6;
+  border: 1px solid #f4e5ce;
+  padding: 7px 8px;
+  border-radius: 20px;
+}
+
+.credit-badge b {
+  font-size: 12px;
+}
+
+.step-number {
+  color: #c39f76;
+  background: #f6f0e5;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: .4px;
+  width: 25px;
+  height: 25px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.section-note {
+  font-size: 11px;
+  font-weight: 400;
+  color: #aaa396;
+  margin-left: auto;
+}
+
+.consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 11px;
+  color: #9a9285;
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+
+.consent input {
+  width: 13px;
+  height: 13px;
+  margin: 1px 0 0;
+  accent-color: var(--brand);
+  flex-shrink: 0;
+}
+
+.consent a {
+  color: #b3805d;
+  margin-left: 3px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.generate-button {
+  width: 100%;
+  min-height: 49px;
+  font-size: 14px;
+  letter-spacing: .5px;
+}
+
+.generate-button > svg:last-child {
+  margin-left: 8px;
+}
+
+.submit-hint {
+  text-align: center;
+  font-size: 11px;
+  color: #a99e8c;
+  margin: 9px 0 14px;
+}
+
+.privacy-footnote {
+  border-top: 1px dashed #eee7dc;
+  padding-top: 13px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: #aaa18f;
+}
+
+@media (max-width: 900px) and (min-width: 701px) {
+  .section-note {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 700px) {
+  .small-kicker {
+    font-size: 10px;
+    letter-spacing: 1px;
+  }
+  .credit-badge {
+    font-size: 11px;
+    padding: 7px;
+    gap: 4px;
+  }
+  .credit-badge svg {
+    width: 12px;
+  }
+  .credit-badge b {
+    font-size: 12px;
+  }
+  .section-note {
+    font-size: 11px;
+  }
+  .consent {
+    font-size: 11px;
+  }
+  .generate-button {
+    min-height: 51px;
+  }
+  .submit-hint {
+    font-size: 11px;
+  }
+  .privacy-footnote {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 360px) {
+  .section-note {
+    font-size: 10px;
+  }
+}
+
+.consent { align-items: center; min-height: 36px; font-size: 11px; color: #83796b; }
+.consent input { width: 17px; height: 17px; margin-top: 0; }
+.submit-hint, .privacy-footnote { color: #8f8370; line-height: 1.7; }
+@media (max-width: 700px) {
+  .section-note { font-size: 10px; }
+}

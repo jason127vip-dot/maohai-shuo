@@ -1,0 +1,349 @@
+.showcase {
+  padding-top: 24px;
+  min-width: 0;
+}
+
+.showcase h1 {
+  font-size: clamp(30px, 3vw, 41px);
+  line-height: 1.55;
+  font-weight: 800;
+  letter-spacing: -1.7px;
+  margin: 20px 0 17px;
+}
+
+.headline-emphasis {
+  color: var(--brand);
+  position: relative;
+  white-space: nowrap;
+}
+
+.headline-emphasis > svg {
+  position: absolute;
+  width: 100%;
+  height: 10px;
+  bottom: -5px;
+  left: 0;
+}
+
+.headline-emphasis path {
+  stroke: #efc5a2;
+  stroke-width: 5;
+  fill: none;
+  stroke-linecap: round;
+}
+
+.hero-description {
+  color: #918a7f;
+  font-size: 13px;
+  line-height: 2;
+  margin: 0;
+}
+
+.handwritten {
+  font-family: "Kaiti SC", "STKaiti", "KaiTi", cursive;
+}
+
+.sticker-stage {
+  position: relative;
+  height: 350px;
+  margin: 13px -7px 0 -10px;
+}
+
+.sample-card {
+  width: 224px;
+  height: 257px;
+  border: 1px solid #eee9df;
+  background: #fffdf8;
+  padding: 8px 10px 10px;
+  position: absolute;
+  border-radius: 9px;
+  box-shadow: 0 9px 18px #5b463c0d;
+  text-align: center;
+}
+
+.sample-card svg {
+  width: 100%;
+  height: 180px;
+}
+
+.sample-card--front {
+  z-index: 2;
+  left: 7px;
+  top: 60px;
+  transform: rotate(-9deg);
+  background: #fff4db;
+}
+
+.sample-card--back {
+  right: -5px;
+  top: 45px;
+  transform: rotate(10deg);
+  background: #eaf0e5;
+}
+
+.sample-caption {
+  display: block;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: .5px;
+}
+
+.sample-brand {
+  display: block;
+  color: #a89b83;
+  font-size: 10px;
+  letter-spacing: 1px;
+  margin-top: 10px;
+}
+
+.paper-tape {
+  position: absolute;
+  z-index: 3;
+  width: 66px;
+  height: 22px;
+  top: -9px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-4deg);
+  background: #eee2c89e;
+  clip-path: polygon(0 0, 97% 3%, 100% 94%, 4% 100%);
+}
+
+.stage-note {
+  position: absolute;
+  top: 6px;
+  left: 20px;
+  color: #aa9582;
+  font-size: 15px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  transform: rotate(-5deg);
+}
+
+.stage-note svg {
+  transform: translateY(8px);
+}
+
+.floating-heart {
+  position: absolute;
+  color: #e69a82;
+  right: -16px;
+  bottom: 48px;
+  transform: rotate(14deg);
+}
+
+.floating-sparkle {
+  position: absolute;
+  color: #d3b77d;
+  top: 26px;
+  right: -8px;
+}
+
+.sticker-caption {
+  position: absolute;
+  bottom: 1px;
+  left: 61px;
+  color: #a29380;
+  font-size: 14px;
+  transform: rotate(-3deg);
+}
+
+.hero-points {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 24px;
+  font-size: 12px;
+  color: #8d8679;
+}
+
+.hero-points > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.point-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.point-dot--orange {
+  background: #e9a38a;
+}
+
+.point-dot--green {
+  background: #a6b79c;
+}
+
+.point-dot--yellow {
+  background: #dec78a;
+}
+
+.sample-disclaimer {
+  margin: 13px 0 0;
+  color: #9d968a;
+  font-size: 11px;
+}
+
+@media (min-width: 1100px) {
+  .showcase {
+    position: sticky;
+    top: 28px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .sticker-stage {
+    transform: scale(.88);
+    transform-origin: left center;
+    width: 430px;
+    margin-right: -50px;
+  }
+  .hero-points {
+    gap: 12px;
+    font-size: 11px;
+  }
+  .showcase h1 {
+    letter-spacing: -1px;
+  }
+}
+
+@media (max-width: 900px) and (min-width: 701px) {
+  .showcase h1 {
+    font-size: 30px;
+  }
+  .sticker-stage {
+    transform: scale(.68);
+    height: 300px;
+    margin-bottom: -35px;
+  }
+  .hero-points {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 700px) {
+  .showcase {
+    padding: 7px 8px 29px;
+    overflow: hidden;
+  }
+  .showcase h1 {
+    font-size: 31px;
+    line-height: 1.5;
+    margin: 13px 0 12px;
+  }
+  .hero-description {
+    font-size: 12px;
+    line-height: 1.9;
+  }
+  .desktop-break {
+    display: none;
+  }
+  .sticker-stage {
+    width: 350px;
+    height: 275px;
+    transform: none;
+    margin: 8px auto 0;
+    max-width: 100%;
+  }
+  .sample-card {
+    width: 176px;
+    height: 204px;
+    padding: 5px 7px 9px;
+  }
+  .sample-card svg {
+    height: 141px;
+  }
+  .sample-caption {
+    font-size: 16px;
+  }
+  .sample-brand {
+    font-size: 10px;
+    margin-top: 8px;
+  }
+  .sample-card--front {
+    top: 46px;
+    left: 9px;
+    transform: rotate(-8deg);
+  }
+  .sample-card--back {
+    top: 37px;
+    right: 7px;
+    transform: rotate(9deg);
+  }
+  .stage-note {
+    top: 0;
+    font-size: 13px;
+    left: 10px;
+  }
+  .stage-note svg {
+    width: 23px;
+  }
+  .paper-tape {
+    width: 54px;
+    height: 19px;
+  }
+  .floating-heart {
+    bottom: 29px;
+    right: 2px;
+  }
+  .floating-heart svg {
+    width: 21px;
+  }
+  .floating-sparkle {
+    right: 1px;
+    top: 16px;
+    width: 25px;
+  }
+  .sticker-caption {
+    bottom: 0;
+    left: 45px;
+    font-size: 12px;
+  }
+  .hero-points {
+    justify-content: center;
+    gap: 16px;
+    font-size: 11px;
+    margin-top: 15px;
+  }
+  .sample-disclaimer {
+    text-align: center;
+    font-size: 11px;
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 360px) {
+  .showcase h1 {
+    font-size: 28px;
+  }
+  .sticker-stage {
+    width: 300px;
+  }
+  .sample-card {
+    width: 163px;
+  }
+  .sample-card--front {
+    left: 3px;
+  }
+  .sample-card--back {
+    right: 2px;
+  }
+  .hero-points {
+    gap: 10px;
+    font-size: 11px;
+  }
+}
+
+/* On phones, start the creation quickly; style examples remain in the form. */
+@media (max-width: 700px) {
+  .showcase { padding: 2px 8px 23px; }
+  .showcase h1 { font-size: 28px; margin: 12px 0 10px; }
+  .hero-description { font-size: 13px; }
+  .sticker-stage { display: none; }
+  .hero-points { justify-content: flex-start; flex-wrap: wrap; margin-top: 14px; gap: 8px 14px; }
+  .sample-disclaimer { display: none; }
+}
