@@ -1,8 +1,63 @@
 # 毛孩儿说开发进度
 
-更新日期：2026-10-29。已恢复前端开发，本次完成浏览器检查、移动端调整及状态修复。继续开发前先阅读本文件及 `frontend/README.md`。
+更新日期：2026-10-30。本次新增 Go 后端，已完成本地演示联调。继续工作前阅读本文件、`backend/README.md` 和 `frontend/README.md`。
 
-## 本次恢复开发完成内容
+## 2026-10-30 后端开发进度
+
+### 已完成
+
+- 新增 `backend/` Go + Gin 项目，按 `cmd`、`configs`、`handler`、`service`、`repository`、`model`、`provider`、`worker`、`storage`、`middleware` 和 `migrations` 拆分。完整目录及职责见 `backend/README.md`。
+- 参数集中在 `backend/configs/`：公开模板 `config.example.yaml`、忽略的真实配置 `config.local.yaml`、提示词 `prompts.yaml` 和字体说明。真实配置尚未创建，需要按 README 复制模板填写。
+- 实现配置严格读取、启动校验、相对路径解析、开发 Cookie 会话、来源校验及统一 JSON 错误。
+- 实现 `/api/health`、`/api/me`、创建任务、查询任务及私有成品图片接口，对齐现有 React。
+- 实现内存演示数据层、Neon PostgreSQL 数据层及独立建表 SQL；没有自动连接用户的 Neon，也没有执行建表 SQL。
+- 实现额度事务设计、用户级幂等、照片指纹冲突校验、并发限制、明确失败只退款一次，以及内部待核对状态。
+- 实现后台任务、豆包 Seedream 适配器及原图 DEMO 适配器；统一模型接口保留后续供应商扩展能力。
+- 实现后端图片校验、私有原图、方形成品及角标、原图立即删除与过期清理。真实模型模式要求配置含中文字形的字体。
+- 前端做了一处必要修复：任务已明确失败后返回制作页，会开始新的提交编号，避免重试一直回到旧失败任务。
+- 保持本地开发模式：正式微信身份尚未实现，程序拒绝以 production 身份模式启动；对象存储、公开分享缩略图及管理后台仍待开发。
+
+### 验证结果
+
+| 检查 | 结果 |
+| --- | --- |
+| `go test -race ./...` | 通过：配置、会话、并发幂等、退款、待核对、图片、worker 和本地 HTTP/假豆包接口 |
+| `go vet ./...` | 通过 |
+| 实际后端 `go build -mod=readonly` | 通过 |
+| 前端 `npm run lint` / `npm run build` | 通过 |
+| React 生产构建 → 实际 Go 演示服务 | 通过：签名会话、上传、后台任务、图片查询、1024 方形 JPEG、原图删除 |
+| 刷新结果页 | Go 任务与会话仍有效，可恢复显示 |
+| 新制作与额度 | 2→1→0，额度耗尽后 UI 禁用且直接 API 请求返回拒绝 |
+| 图片归属 | 另一浏览器会话无法读取成品 |
+| 本地联调控制台和外部请求 | 无未捕获页面错误，无外部模型请求 |
+| 真实 Neon 事务 / 豆包出图 / 微信真机 | 尚未执行；不视为通过 |
+
+联调使用自建测试图片、内存数据库和 DEMO 适配器，没有模型费用。临时测试使用 58080/58173 端口，测试后已停止并确认无监听；没有替用户启动默认 8080/5173 服务，也没有停止用户自己的进程。
+
+### 下一步运行
+
+后端终端：
+
+```bash
+cd /Users/jason/Documents/Work/workspace/MaoHaishuo/backend
+go mod download
+test -f configs/config.local.yaml || cp configs/config.example.yaml configs/config.local.yaml
+go run ./cmd/server -config configs/config.local.yaml
+```
+
+前端另一个终端：
+
+```bash
+cd /Users/jason/Documents/Work/workspace/MaoHaishuo/frontend
+nvm use
+VITE_USE_MOCK=false npm run dev
+```
+
+前端必须使用 false，才会访问 Go。后端模板仍是 `ai.provider: demo` 和 `database.driver: memory`，所以此时只是后端本地演示。配置真实 Neon、模型 ID、API Key 及中文字体后，才进入真实服务联调。配置方法、数据库表和目录结构均写在 `backend/README.md`。
+
+本轮修改未提交或推送 Git；新增真实配置、运行图片和字体文件的忽略规则已经验证。
+
+## 2026-10-29 前端恢复记录（历史）
 
 - 已在实际 `frontend/` 安装锁定依赖，并启动本地模拟预览 `http://127.0.0.1:5173`。服务器只监听本机，需要终端进程保持运行；关闭后按下方说明重启。
 - 手机端缩短介绍区，使上传入口在首屏内可见；场景改为两列，增大辅助文字与点击区域。390px 宽度下上传区顶部由约 805px 提前至 483px。
@@ -34,11 +89,11 @@
 
 - 本地项目：`/Users/jason/Documents/Work/workspace/MaoHaishuo`
 - GitHub：`https://github.com/jason127vip-dot/maohai-shuo.git`
-- 分支：`main`。当前还没有首次提交；本次不执行提交或推送。
+- 分支：`main`。仓库已有提交，本轮新增后端代码尚未提交或推送。
 - 前端：React + TypeScript + Vite，使用 React Router。
-- 后端计划：Go + Gin；数据库计划：Neon PostgreSQL。
+- 后端：Go + Gin，已实现本地演示及 Neon PostgreSQL 数据层；真实 Neon 连接待配置验证。
 - 首个图片模型计划：豆包 Seedream；后端应保留即梦等其他平台的适配能力。
-- 本次代码只涉及 `frontend/`；`backend/` 与 `docs/` 不改动。
+- 代码位于 `frontend/` 和 `backend/`；`docs/` 未修改。
 
 ## 已保存内容
 
@@ -154,15 +209,15 @@ npm run preview
 
 ## 未完成任务
 
-1. 用真实宠物照片在微信真机验证选图、保存与完整操作体验；浏览器检查已经完成。
-2. 明确并实现免费重做规则，包括单场景次数和“换一批”计费；当前“再做一张”仍是普通新制作。
-3. Go 工程、Neon 数据结构、微信会话、任务和额度事务、统一模型接口及首个模型供应商接入。
-4. 微信 JSSDK 分享、对象存储、原图删除、正式隐私指引及上线配置。
-5. 评估 ESLint 9 升级；当前 lint 通过，但依赖安装提示该大版本不再受支持。
-6. 首页是否需要独立展示页，再按产品需要决定；当前 `/` 直接进入制作页。
+1. 配置专用 Neon，审阅并在目标库执行迁移，验证真实事务、断连、恢复及连接池行为。
+2. 配置豆包 API Key、Model ID 和已授权中文字体，用少量真实宠物照片验证保真度、耗时、失败和计费。
+3. 微信 OpenID 身份、网页授权、JSSDK、真机保存与分享。当前开发 Cookie 不能用于正式运营。
+4. 生产对象存储、公开分享缩略图、原图及成品删除管理、正式隐私指引和 AI 标识核对。
+5. 明确免费重做规则；实现待核对任务的管理/结算、额度调整、白名单和数据导出。
+6. 评估前端 ESLint 9 升级；当前 lint 通过。
 
 ## 恢复工作的下一步
 
-**制作页及结果预览的浏览器流程已通过，可以先审阅页面，再明确免费重做规则并推进 Go 接口。** 不需要重新初始化项目，不要使用脚手架覆盖 `frontend/`。保持 React + Go + Neon 的已定方向，以及多模型适配在后端的边界。
+**先按后端 README 运行本地前后端，再配置专用 Neon 和豆包做真实服务联调。** 不需要重新初始化项目，不要使用脚手架覆盖 `frontend/`。保持 React + Go + Neon 的已定方向，以及多模型适配在后端的边界。
 
-当前所有代码尚未 Git 提交或推送。需要首次提交时，先检查 `git status`，确认不包含 `.env.local`、密钥、`node_modules`、`dist` 和 `.DS_Store`；本次保存不会更改现有 Git 历史。
+本轮新增后端与配套前端修复尚未提交或推送。提交前检查 `git status`，确认不包含真实配置、密钥、运行图片、字体、`node_modules`、`dist` 和 `.DS_Store`；本次没有更改 Git 历史。

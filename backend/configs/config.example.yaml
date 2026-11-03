@@ -1,0 +1,63 @@
+# Copy to config.local.yaml. All paths below are relative to this file's folder.
+# This template only uses an in-memory database and a local demo image provider.
+server:
+  environment: development
+  host: 127.0.0.1
+  port: 8080
+  allowed_origins:
+    - http://127.0.0.1:5173
+    - http://localhost:5173
+  read_timeout_seconds: 20
+  shutdown_timeout_seconds: 15
+
+database:
+  driver: memory # memory for local demo; postgres for Neon
+  url: "" # Neon connection string, including sslmode=require
+  max_connections: 5
+
+auth:
+  mode: development # WeChat OAuth is a later integration; production fails closed.
+  cookie_name: maohai_session
+  signing_key: local-development-key-change-before-sharing
+  session_hours: 24
+
+wechat:
+  app_id: ""
+  app_secret: ""
+  callback_url: ""
+
+ai:
+  provider: demo # Set doubao only when deliberately testing paid image generation.
+  timeout_seconds: 120
+  demo_delay_milliseconds: 1500
+  providers:
+    doubao:
+      base_url: https://ark.cn-beijing.volces.com/api/v3
+      api_key: ""
+      model: "" # Fill your enabled Seedream Model ID, not the Doubao chat model.
+      size: 2K
+      disable_group_generation: true # Supported by Seedream 5.0 lite / 4.5 / 4.0.
+
+worker:
+  concurrency: 1
+  poll_milliseconds: 1000
+  stale_after_seconds: 180
+
+storage:
+  driver: local
+  root_dir: ../data
+  max_upload_mb: 10
+  max_input_pixels: 20000000
+  input_max_edge: 2048
+  output_size: 1024
+  original_retention_seconds: 3600
+  # Required for real AI results. See fonts/README.md. Not needed for demo mode.
+  font_path: ""
+  brand_text: 毛孩儿说
+
+quota:
+  # 每位新用户的初始免费次数，可改为 5、10 等；重启后生效，已有用户余额保留。
+  initial_credits: 2
+  max_active_tasks_per_user: 1
+
+prompts_file: prompts.yaml

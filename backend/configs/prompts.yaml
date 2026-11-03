@@ -1,0 +1,11 @@
+# Model prompts stay on the backend. IDs must match the React options.
+template: "把参考照片里的这只猫或狗做成一张表情图。保留它的毛色、花纹、脸型和长相特征，保持是同一只宠物。{scene} 表情生动，背景干净，方形构图，只生成一张。{style} 不要额外生成文字。"
+scenes:
+  mischief: "它刚把家拆了，站在碎纸片和倒下的垃圾桶中间，一脸无辜地看着镜头。"
+  snack: "它坐在餐桌旁，眼睛盯着食物，一脸期待地讨吃的。"
+  sleep: "它四脚朝天躺在键盘上，嘴张着，睡得很没形象。"
+  door: "它蹲在门口，耳朵耷拉着，一脸委屈地抬头等主人回家。"
+styles:
+  sketch: "整体改成铅笔素描画风，保留铅笔线条，不上色。"
+  cartoon: "整体改成清晰的卡通画风，线条干净，颜色明快。"
+  watercolor: "整体改成水彩画风，笔触轻松，颜色柔和。"

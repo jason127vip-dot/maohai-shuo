@@ -20,11 +20,11 @@ export function ResultPage() {
 
   return (
     <main id="main-content" className="result-page">
-      <Link className="back-link" to="/"><ArrowLeft size={16} /> 返回制作页</Link>
+      <Link className="back-link" to="/" onClick={failed ? startNextCreation : undefined}><ArrowLeft size={16} /> 返回制作页</Link>
       <section className="result-card">
         {error || failed ? (
           <div className="result-error" role="alert"><ImageOff size={38} /><h1>{failed ? '这次没有生成成功' : '暂时没找到这份可爱'}</h1><p>{error || task?.error || '请稍后重试，额度以后台记录为准。'}</p>
-            {!failed && <Button onClick={retry}>重新查询</Button>}<Link className="text-link" to="/">回到制作页 <ArrowRight size={15} /></Link></div>
+            {!failed && <Button onClick={retry}>重新查询</Button>}<Link className="text-link" to="/" onClick={failed ? startNextCreation : undefined}>回到制作页 <ArrowRight size={15} /></Link></div>
         ) : task?.status === 'succeeded' && task.imageUrl ? (
           <>
             <span className="eyebrow"><span /> 毛孩的小剧场</span>

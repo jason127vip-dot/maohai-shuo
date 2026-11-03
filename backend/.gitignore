@@ -1,0 +1,9 @@
+/configs/config.local.yaml
+/configs/config.*.local.yaml
+/configs/fonts/*
+!/configs/fonts/README.md
+/data/
+/bin/
+/coverage.out
+*.test
+.DS_Store
