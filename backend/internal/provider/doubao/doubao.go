@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/jason127vip-dot/maohai-shuo/backend/internal/config"
@@ -52,9 +53,27 @@ func (g *Generator) Generate(ctx context.Context, r provider.Request) (provider.
 		result.RequestID = response.Header.Get("X-Tt-Logid")
 	}
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		io.Copy(io.Discard, io.LimitReader(response.Body, 8192))
+		// Retain only bounded diagnostic identifiers, never the upstream message:
+		// it may echo the prompt, photo data, or credentials.
+		var details struct {
+			Error struct {
+				Code string `json:"code"`
+			} `json:"error"`
+		}
+		providerCode := ""
+		if json.NewDecoder(io.LimitReader(response.Body, 8192)).Decode(&details) == nil {
+			providerCode = diagnosticToken(details.Error.Code, g.config.APIKey)
+		}
+		result.RequestID = diagnosticToken(result.RequestID, g.config.APIKey)
 		uncertain := response.StatusCode >= 500 || response.StatusCode == http.StatusRequestTimeout
-		return result, &provider.Failure{Code: "PROVIDER_HTTP_ERROR", Uncertain: uncertain}
+		code := "PROVIDER_HTTP_ERROR"
+		if response.StatusCode == http.StatusForbidden {
+			switch providerCode {
+			case "AccountOverdueError", "OperationDenied.ServiceOverdue":
+				code = provider.CodeInsufficientBalance
+			}
+		}
+		return result, &provider.Failure{Code: code, Uncertain: uncertain, HTTPStatus: response.StatusCode, ProviderCode: providerCode}
 	}
 	const maxResponse = 40 << 20
 	data, err := io.ReadAll(io.LimitReader(response.Body, maxResponse+1))
@@ -79,4 +98,13 @@ func (g *Generator) Generate(ctx context.Context, r provider.Request) (provider.
 		return result, &provider.Failure{Code: "PROVIDER_IMAGE_UNCERTAIN", Uncertain: true}
 	}
 	return result, nil
+}
+
+var diagnosticPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$`)
+
+func diagnosticToken(value, apiKey string) string {
+	if !diagnosticPattern.MatchString(value) || (apiKey != "" && strings.Contains(value, apiKey)) {
+		return ""
+	}
+	return value
 }

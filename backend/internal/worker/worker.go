@@ -88,10 +88,15 @@ func (p *Pool) Process(ctx context.Context, task model.Task) {
 		var failure *provider.Failure
 		if errors.As(err, &failure) {
 			uncertain = failure.Uncertain
+			p.Log.Warn("provider_call_failed", "task_id", task.ID, "provider", task.Provider,
+				"failure_code", failure.Code, "http_status", failure.HTTPStatus,
+				"provider_code", failure.ProviderCode, "request_id", result.RequestID)
 		}
 		message := "图片生成失败，本次额度已退回，请稍后再试"
 		if uncertain {
 			message = "模型调用结果待核对，请勿重复生成"
+		} else if failure != nil && failure.Code == provider.CodeInsufficientBalance {
+			message = "AI 服务账户余额不足，请联系管理员充值后再试，本次额度已退回"
 		}
 		p.recordFailure(task, message, uncertain, outcome)
 		return
