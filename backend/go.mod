@@ -5,6 +5,7 @@ go 1.25.0
 require (
 	github.com/gin-gonic/gin v1.11.0
 	github.com/jackc/pgx/v5 v5.9.1
+	github.com/wechatpay-apiv3/wechatpay-go v0.2.21
 	golang.org/x/image v0.35.0
 	gopkg.in/yaml.v3 v3.0.1
 )

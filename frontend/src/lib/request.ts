@@ -26,6 +26,9 @@ export async function request<T>(path: string, init: RequestInit = {}): Promise<
     const body: unknown = await response.json().catch(() => null)
     if (!response.ok) {
       const error = body as { code?: string; message?: string } | null
+      if (response.status === 401 && error?.code === 'WECHAT_LOGIN_REQUIRED') {
+        window.dispatchEvent(new Event('maohai-login-required'))
+      }
       throw new ApiError(error?.message || '请求没有成功，请稍后再试。', error?.code || 'HTTP_ERROR', response.status)
     }
     if (body === null) throw new Error('服务器返回的数据格式不正确，请稍后再试。')

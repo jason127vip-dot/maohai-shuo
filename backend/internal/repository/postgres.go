@@ -35,6 +35,18 @@ func NewPostgres(ctx context.Context, url string, maxConnections int32) (*Postgr
 		pool.Close()
 		return nil, errors.New("数据库表尚未准备，请先审阅并执行 migrations/001_initial.sql")
 	}
+	if _, err = pool.Exec(ctx, `SELECT nickname,avatar_url,profile_updated_at FROM maohai_users LIMIT 0`); err != nil {
+		pool.Close()
+		return nil, errors.New("用户资料字段尚未准备，请先审阅并执行 migrations/003_history_wechat_profile.sql")
+	}
+	if _, err = pool.Exec(ctx, `SELECT p.birth_date,p.is_default,t.pet_id,t.pet_name,t.pet_age,t.show_pet_label,t.note FROM maohai_pets p CROSS JOIN maohai_generation_tasks t LIMIT 0`); err != nil {
+		pool.Close()
+		return nil, errors.New("宠物成长记录结构尚未准备，请先审阅并执行 migrations/004_pet_growth.sql")
+	}
+	if _, err = pool.Exec(ctx, `SELECT o.transaction_id,o.next_check_at,p.expires_at,l.package_id FROM maohai_payment_orders o CROSS JOIN maohai_credit_packages p CROSS JOIN maohai_quota_ledger l LIMIT 0`); err != nil {
+		pool.Close()
+		return nil, errors.New("支付与套餐结构尚未准备，请先审阅并执行 migrations/005_wechat_pay.sql")
+	}
 	return &Postgres{pool}, nil
 }
 func (p *Postgres) Close() { p.pool.Close() }
@@ -44,21 +56,21 @@ func (p *Postgres) EnsureUser(ctx context.Context, id string, credits int) error
 }
 func (p *Postgres) Credits(ctx context.Context, id string) (int, error) {
 	var value int
-	err := p.pool.QueryRow(ctx, `SELECT credits FROM maohai_users WHERE id=$1`, id).Scan(&value)
+	err := p.pool.QueryRow(ctx, `SELECT credits+COALESCE((SELECT sum(remaining) FROM maohai_credit_packages WHERE user_id=$1 AND starts_at<=clock_timestamp() AND expires_at>clock_timestamp()),0) FROM maohai_users WHERE id=$1`, id).Scan(&value)
 	if errors.Is(err, pgx.ErrNoRows) {
 		err = model.ErrNotFound
 	}
 	return value, err
 }
 
-const columns = `id,user_id,idempotency_key,fingerprint,scene,style,provider,model,prompt,status,error,created_at,started_at,finished_at,request_id,output_count,elapsed_ms`
+const columns = `id,user_id,idempotency_key,fingerprint,scene,style,provider,model,prompt,status,error,created_at,started_at,finished_at,request_id,output_count,elapsed_ms,COALESCE(pet_id,''),pet_name,pet_age,show_pet_label,note`
 
 type scanner interface{ Scan(...any) error }
 
 func scanTask(row scanner) (model.Task, error) {
 	var t model.Task
 	var started, finished *time.Time
-	err := row.Scan(&t.ID, &t.UserID, &t.IdempotencyKey, &t.Fingerprint, &t.Scene, &t.Style, &t.Provider, &t.Model, &t.Prompt, &t.Status, &t.Error, &t.CreatedAt, &started, &finished, &t.RequestID, &t.OutputCount, &t.ElapsedMS)
+	err := row.Scan(&t.ID, &t.UserID, &t.IdempotencyKey, &t.Fingerprint, &t.Scene, &t.Style, &t.Provider, &t.Model, &t.Prompt, &t.Status, &t.Error, &t.CreatedAt, &started, &finished, &t.RequestID, &t.OutputCount, &t.ElapsedMS, &t.PetID, &t.PetName, &t.PetAge, &t.ShowPetLabel, &t.Note)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return t, model.ErrNotFound
 	}
@@ -72,6 +84,9 @@ func scanTask(row scanner) (model.Task, error) {
 }
 func (p *Postgres) Get(ctx context.Context, id, user string) (model.Task, error) {
 	return scanTask(p.pool.QueryRow(ctx, `SELECT `+columns+` FROM maohai_generation_tasks WHERE id=$1 AND user_id=$2`, id, user))
+}
+func (p *Postgres) FindRequest(ctx context.Context, user, key string) (model.Task, error) {
+	return scanTask(p.pool.QueryRow(ctx, `SELECT `+columns+` FROM maohai_generation_tasks WHERE user_id=$1 AND idempotency_key=$2`, user, key))
 }
 func (p *Postgres) Reserve(ctx context.Context, t model.Task, maxActive int) (model.Task, bool, error) {
 	tx, err := p.pool.Begin(ctx)
@@ -94,30 +109,30 @@ func (p *Postgres) Reserve(ctx context.Context, t model.Task, maxActive int) (mo
 		return t, false, err
 	}
 	var active int
-	if err = tx.QueryRow(ctx, `SELECT count(*) FROM maohai_generation_tasks WHERE user_id=$1 AND status IN ('queued','processing','uncertain')`, t.UserID).Scan(&active); err != nil {
+	if err = tx.QueryRow(ctx, `SELECT count(*) FROM maohai_generation_tasks WHERE user_id=$1 AND status IN ('queued','processing')`, t.UserID).Scan(&active); err != nil {
 		return t, false, err
 	}
 	if active >= maxActive {
 		return t, false, model.ErrActiveTask
 	}
-	if balance <= 0 {
-		return t, false, model.ErrQuota
-	}
-	_, err = tx.Exec(ctx, `INSERT INTO maohai_generation_tasks(id,user_id,idempotency_key,fingerprint,scene,style,provider,model,prompt,status) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,'queued')`, t.ID, t.UserID, t.IdempotencyKey, t.Fingerprint, t.Scene, t.Style, t.Provider, t.Model, t.Prompt)
+	pkg, err := spendPackage(ctx, tx, t.UserID, balance)
 	if err != nil {
 		return t, false, err
 	}
-	if _, err = tx.Exec(ctx, `UPDATE maohai_users SET credits=credits-1 WHERE id=$1`, t.UserID); err != nil {
+	if t.CreatedAt.IsZero() {
+		t.CreatedAt = time.Now().UTC()
+	}
+	_, err = tx.Exec(ctx, `INSERT INTO maohai_generation_tasks(id,user_id,idempotency_key,fingerprint,scene,style,provider,model,prompt,status,pet_id,pet_name,pet_age,show_pet_label,created_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,'queued',NULLIF($10,''),$11,$12,$13,$14)`, t.ID, t.UserID, t.IdempotencyKey, t.Fingerprint, t.Scene, t.Style, t.Provider, t.Model, t.Prompt, t.PetID, t.PetName, t.PetAge, t.ShowPetLabel, t.CreatedAt)
+	if err != nil {
 		return t, false, err
 	}
-	if _, err = tx.Exec(ctx, `INSERT INTO maohai_quota_ledger(user_id,task_id,event,amount) VALUES($1,$2,'reserve',-1)`, t.UserID, t.ID); err != nil {
+	if _, err = tx.Exec(ctx, `INSERT INTO maohai_quota_ledger(user_id,task_id,event,amount,package_id) VALUES($1,$2,'reserve',-1,NULLIF($3,''))`, t.UserID, t.ID, pkg); err != nil {
 		return t, false, err
 	}
 	if err = tx.Commit(ctx); err != nil {
 		return t, false, err
 	}
 	t.Status = model.Queued
-	t.CreatedAt = time.Now().UTC()
 	return t, true, nil
 }
 func (p *Postgres) Claim(ctx context.Context) (model.Task, error) {
@@ -160,6 +175,12 @@ func (p *Postgres) finish(ctx context.Context, id, status, message string, o mod
 	}
 	defer tx.Rollback(ctx)
 	var user, current string
+	if err = tx.QueryRow(ctx, `SELECT user_id FROM maohai_generation_tasks WHERE id=$1`, id).Scan(&user); err != nil {
+		return err
+	}
+	if _, err = tx.Exec(ctx, `SELECT id FROM maohai_users WHERE id=$1 FOR UPDATE`, user); err != nil {
+		return err
+	}
 	if err = tx.QueryRow(ctx, `SELECT user_id,status FROM maohai_generation_tasks WHERE id=$1 FOR UPDATE`, id).Scan(&user, &current); err != nil {
 		return err
 	}
@@ -175,27 +196,61 @@ func (p *Postgres) finish(ctx context.Context, id, status, message string, o mod
 	if _, err = tx.Exec(ctx, `UPDATE maohai_generation_attempts SET status=$2,finished_at=now(),request_id=$3,output_count=$4,elapsed_ms=$5 WHERE task_id=$1`, id, status, o.RequestID, o.OutputCount, o.ElapsedMS); err != nil {
 		return err
 	}
-	if status == model.Failed {
-		if _, err = tx.Exec(ctx, `INSERT INTO maohai_quota_ledger(user_id,task_id,event,amount) VALUES($1,$2,'refund',1)`, user, id); err != nil {
-			return err
-		}
-		if _, err = tx.Exec(ctx, `UPDATE maohai_users SET credits=credits+1 WHERE id=$1`, user); err != nil {
+	if status == model.Failed || status == model.Uncertain {
+		if err = refundPackage(ctx, tx, user, id); err != nil {
 			return err
 		}
 	}
 	return tx.Commit(ctx)
 }
 func (p *Postgres) RecoverStale(ctx context.Context, cutoff time.Time) error {
-	tx, err := p.pool.Begin(ctx)
+	rows, err := p.pool.Query(ctx, `SELECT id FROM maohai_generation_tasks WHERE (status='processing' AND started_at<$1) OR (status='uncertain' AND NOT EXISTS (SELECT 1 FROM maohai_quota_ledger WHERE task_id=maohai_generation_tasks.id AND event='refund')) ORDER BY user_id,id`, cutoff)
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
-	_, err = tx.Exec(ctx, `WITH stale AS (UPDATE maohai_generation_tasks SET status='uncertain',error='任务中断，供应商结果待核对',finished_at=now() WHERE status='processing' AND started_at<$1 RETURNING id) UPDATE maohai_generation_attempts SET status='uncertain',finished_at=now() WHERE task_id IN (SELECT id FROM stale)`, cutoff)
+	ids := []string{}
+	for rows.Next() {
+		var id string
+		if err = rows.Scan(&id); err != nil {
+			rows.Close()
+			return err
+		}
+		ids = append(ids, id)
+	}
+	err = rows.Err()
+	rows.Close()
 	if err != nil {
 		return err
 	}
-	return tx.Commit(ctx)
+	for _, id := range ids {
+		if err = p.Fail(ctx, id, "任务中断，供应商结果待核对", true, model.Outcome{}); err != nil && !errors.Is(err, model.ErrConflict) {
+			return err
+		}
+		// Older uncertain tasks may predate refunds; preserve their stored outcome.
+		tx, e := p.pool.Begin(ctx)
+		if e != nil {
+			return e
+		}
+		var user, status string
+		e = tx.QueryRow(ctx, `SELECT user_id FROM maohai_generation_tasks WHERE id=$1`, id).Scan(&user)
+		if e == nil {
+			_, e = tx.Exec(ctx, `SELECT id FROM maohai_users WHERE id=$1 FOR UPDATE`, user)
+		}
+		if e == nil {
+			e = tx.QueryRow(ctx, `SELECT status FROM maohai_generation_tasks WHERE id=$1 FOR UPDATE`, id).Scan(&status)
+		}
+		if e == nil && status == model.Uncertain {
+			e = refundPackage(ctx, tx, user, id)
+		}
+		if e == nil {
+			e = tx.Commit(ctx)
+		}
+		_ = tx.Rollback(ctx)
+		if e != nil {
+			return e
+		}
+	}
+	return nil
 }
 func (p *Postgres) CanDeleteOriginal(ctx context.Context, id string, cutoff time.Time) (bool, error) {
 	var finished *time.Time

@@ -7,6 +7,8 @@ export interface CreationDraft {
   scene: SceneId | null
   style: ArtStyleId | null
   consent: boolean
+  petId: string | null
+  showPetLabel: boolean
 }
 
 interface DraftContextValue {

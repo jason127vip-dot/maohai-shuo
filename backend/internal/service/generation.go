@@ -5,7 +5,9 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"regexp"
+	"time"
 
 	"github.com/jason127vip-dot/maohai-shuo/backend/internal/config"
 	"github.com/jason127vip-dot/maohai-shuo/backend/internal/model"
@@ -20,16 +22,19 @@ type ValidationError struct{ Message string }
 func (e *ValidationError) Error() string { return e.Message }
 
 type Generation struct {
-	Store   repository.Store
-	Files   storage.Store
-	Config  config.Config
-	Prompts config.Prompts
+	Store    repository.Store
+	Files    storage.Store
+	Config   config.Config
+	Prompts  config.Prompts
+	Renderer *storage.Renderer
 }
 type Input struct {
 	Photo          []byte
 	Scene          string
 	Style          string
 	IdempotencyKey string
+	PetID          string
+	ShowPetLabel   bool
 }
 
 func (s *Generation) Create(ctx context.Context, user string, input Input) (model.Task, bool, error) {
@@ -50,11 +55,47 @@ func (s *Generation) Create(ctx context.Context, user string, input Input) (mode
 	sum := sha256.New()
 	sum.Write(normalized)
 	sum.Write([]byte("\x00" + input.Scene + "\x00" + input.Style))
+	// Preserve old no-pet fingerprints; pet identity and label changes are new inputs.
+	if input.PetID != "" || input.ShowPetLabel {
+		sum.Write([]byte(fmt.Sprintf("\x00pet:%s\x00label:%t", input.PetID, input.ShowPetLabel)))
+	}
+	fingerprint := hex.EncodeToString(sum.Sum(nil))
+	// Resolve retries before consulting mutable profile/font data. Reserve still
+	// checks atomically, since another request may be accepted after this lookup.
+	if old, lookupErr := s.Store.FindRequest(ctx, user, input.IdempotencyKey); lookupErr == nil {
+		if old.Fingerprint != fingerprint {
+			return model.Task{}, false, model.ErrConflict
+		}
+		return old, false, nil
+	} else if !errors.Is(lookupErr, model.ErrNotFound) {
+		return model.Task{}, false, lookupErr
+	}
+	now := time.Now().UTC()
+	var pet model.Pet
+	if input.PetID != "" {
+		pet, err = s.Store.GetPet(ctx, input.PetID, user)
+		if err != nil {
+			return model.Task{}, false, err
+		}
+		pet = pet.At(now)
+	} else if input.ShowPetLabel {
+		return model.Task{}, false, &ValidationError{"请先选择宠物，再显示名字和年龄"}
+	}
+	captionTask := model.Task{CreatedAt: now, PetName: pet.Name, PetAge: pet.AgeLabel, ShowPetLabel: input.ShowPetLabel}
+	if input.ShowPetLabel {
+		if s.Renderer == nil {
+			return model.Task{}, false, &ValidationError{"当前服务尚未准备好宠物文字字体，请关闭文字显示或联系管理员"}
+		}
+		if err = s.Renderer.ValidateCaption(captionTask.PetCaption()); err != nil {
+			return model.Task{}, false, &ValidationError{err.Error()}
+		}
+	}
 	id, err := model.NewID()
 	if err != nil {
 		return model.Task{}, false, errors.New("任务编号创建失败")
 	}
-	task := model.Task{ID: id, UserID: user, IdempotencyKey: input.IdempotencyKey, Fingerprint: hex.EncodeToString(sum.Sum(nil)), Scene: input.Scene, Style: input.Style, Provider: s.Config.AI.Provider, Model: s.Config.AI.Providers.Doubao.Model, Prompt: prompt}
+	task := model.Task{ID: id, UserID: user, IdempotencyKey: input.IdempotencyKey, Fingerprint: fingerprint, Scene: input.Scene, Style: input.Style, Provider: s.Config.AI.Provider, Model: s.Config.AI.Providers.Doubao.Model, Prompt: prompt}
+	task.CreatedAt, task.PetID, task.PetName, task.PetAge, task.ShowPetLabel = now, pet.ID, pet.Name, pet.AgeLabel, input.ShowPetLabel
 	if task.Provider == "demo" {
 		task.Model = "demo-original"
 	}

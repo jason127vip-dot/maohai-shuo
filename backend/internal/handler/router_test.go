@@ -16,6 +16,7 @@ import (
 	"testing"
 
 	"github.com/jason127vip-dot/maohai-shuo/backend/internal/config"
+	"github.com/jason127vip-dot/maohai-shuo/backend/internal/model"
 	"github.com/jason127vip-dot/maohai-shuo/backend/internal/provider"
 	"github.com/jason127vip-dot/maohai-shuo/backend/internal/provider/demo"
 	"github.com/jason127vip-dot/maohai-shuo/backend/internal/repository"
@@ -145,5 +146,39 @@ func TestFrontendContractAndTaskOwnership(t *testing.T) {
 	}
 	if read(resp)["remainingCredits"] != float64(1) {
 		t.Fatal("idempotent task consumed more than one credit")
+	}
+	// A provider timeout must not strand the user's last credit or require a
+	// different browser identity before they can create again.
+	status, failedTask := post("timeout-request", "mischief", "")
+	if status != 202 {
+		t.Fatalf("could not submit timeout scenario: %d %+v", status, failedTask)
+	}
+	claimed, err = store.Claim(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = store.Fail(context.Background(), claimed.ID, "provider timed out", true, model.Outcome{}); err != nil {
+		t.Fatal(err)
+	}
+	resp, err = client.Get(server.URL + "/api/generations/" + claimed.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	failedResult := read(resp)
+	if failedResult["status"] != "failed" || failedResult["error"] != "本次未能取得生成结果，次数已退回原账户或套餐。可以返回制作页重新生成。" {
+		t.Fatalf("unexpected timeout response: %+v", failedResult)
+	}
+	resp, err = client.Get(server.URL + "/api/me")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if read(resp)["remainingCredits"] != float64(1) {
+		t.Fatal("uncertain task did not restore the user's last credit")
+	}
+	if status, old := post("timeout-request", "mischief", ""); status != 200 || old["id"] != claimed.ID || old["status"] != "failed" {
+		t.Fatal("same-key retry must return the original failed result")
+	}
+	if status, next := post("after-timeout", "mischief", ""); status != 202 || next["id"] == claimed.ID {
+		t.Fatalf("same user still blocked after timeout: %d %+v", status, next)
 	}
 }

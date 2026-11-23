@@ -1,3 +1,4 @@
+import { createRandomId } from '../../lib/uuid'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { DraftContext } from './draftContext'
@@ -5,7 +6,7 @@ import type { CreationDraft } from './draftContext'
 
 /** Keeps the current creation when navigating to privacy/results; never persists photos. */
 export function CreationDraftProvider({ children }: { children: ReactNode }) {
-  const [draft, setDraft] = useState<CreationDraft>({ photo: null, scene: null, style: null, consent: false })
+  const [draft, setDraft] = useState<CreationDraft>({ photo: null, scene: null, style: null, consent: false, petId: null, showPetLabel: true })
   const submissionKey = useRef<string | null>(null)
 
   useEffect(() => {
@@ -14,12 +15,12 @@ export function CreationDraftProvider({ children }: { children: ReactNode }) {
   }, [draft.photo])
 
   const updateDraft = useCallback((patch: Partial<CreationDraft>) => {
-    if ('photo' in patch || 'scene' in patch || 'style' in patch) submissionKey.current = null
+    if ('photo' in patch || 'scene' in patch || 'style' in patch || 'petId' in patch || 'showPetLabel' in patch) submissionKey.current = null
     setDraft(previous => ({ ...previous, ...patch }))
   }, [])
 
   const getSubmissionKey = useCallback(() => {
-    submissionKey.current ??= crypto.randomUUID()
+    submissionKey.current ??= createRandomId()
     return submissionKey.current
   }, [])
 

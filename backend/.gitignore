@@ -1,5 +1,7 @@
 /configs/config.local.yaml
 /configs/config.*.local.yaml
+/configs/payment.local.yaml
+/configs/payment/
 /configs/fonts/*
 !/configs/fonts/README.md
 /data/

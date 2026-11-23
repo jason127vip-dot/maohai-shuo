@@ -1,0 +1,90 @@
+# Merge into the existing server configuration; preserve model, storage and quota settings.
+# Never overwrite a real configuration with this example. No secrets in this file.
+server:
+  environment: production
+  host: 127.0.0.1
+  port: 8080
+  allowed_origins:
+    - http://maohai.aidistance.cn:8088
+  read_timeout_seconds: 20
+  shutdown_timeout_seconds: 15
+
+database:
+  driver: postgres
+  url: "postgresql://REPLACE_USER:REPLACE_PASSWORD@REPLACE_HOST/REPLACE_DATABASE?sslmode=require"
+  max_connections: 5
+
+auth:
+  mode: wechat
+  cookie_name: maohai_session
+  signing_key: REPLACE_WITH_UNIQUE_RANDOM_SECRET_AT_LEAST_32_CHARS # Or MAOHAI_AUTH_SIGNING_KEY
+  session_hours: 24
+
+wechat:
+  app_id: "wxac7ef35276f43ad7"
+  app_secret: "" # Set on the server, or use MAOHAI_WECHAT_APP_SECRET
+  callback_url: http://maohai.aidistance.cn/api/auth/wechat/callback
+  frontend_url: http://maohai.aidistance.cn:8088
+
+ai:
+  provider: demo # Set doubao only when deliberately testing paid image generation.
+  timeout_seconds: 120
+  demo_delay_milliseconds: 1500
+  providers:
+    doubao:
+      base_url: https://ark.cn-beijing.volces.com/api/v3
+      api_key: ""
+      model: "" # Fill your enabled Seedream Model ID, not the Doubao chat model.
+      size: 2K
+      disable_group_generation: true # Supported by Seedream 5.0 lite / 4.5 / 4.0.
+
+worker:
+  concurrency: 1
+  poll_milliseconds: 1000
+  stale_after_seconds: 180
+
+storage:
+  driver: local
+  root_dir: ../data
+  max_upload_mb: 10
+  max_input_pixels: 20000000
+  input_max_edge: 2048
+  output_size: 1024
+  original_retention_seconds: 3600
+  # Required for real AI results. See fonts/README.md. Not needed for demo mode.
+  font_path: ""
+  brand_text: 毛孩儿说
+
+quota:
+  # 每位新用户的初始免费次数，可改为 5、10 等；重启后生效，已有用户余额保留。
+  initial_credits: 2
+  max_active_tasks_per_user: 1
+
+prompts_file: prompts.yaml
+
+# Payment settings can alternatively live in an ignored sidecar YAML.
+# Set payment_file: "payment.local.yaml" and leave payment.enabled=false/mch_id empty here.
+payment_file: ""
+payment:
+  enabled: false # Enable only after HTTPS, JSAPI permission, AppID binding and migration 005.
+  mch_id: ""
+  certificate_serial: ""
+  merchant_certificate_path: "payment/apiclient_cert.pem"
+  private_key_path: "payment/apiclient_key.pem"
+  api_v3_key: "" # 32 ASCII letters/digits; server-side only. APIv2 key is not used.
+  public_key_id: ""
+  public_key_path: "payment/pub_key.pem"
+  notify_url: "" # https://YOUR_DOMAIN/api/payments/wechat/notify
+  order_minutes: 15
+  http_timeout_seconds: 10
+  plans:
+    - id: month
+      name: 月卡
+      amount_fen: 480
+      credits: 4
+      months: 1
+    - id: year
+      name: 年卡
+      amount_fen: 5800
+      credits: 48
+      months: 12

@@ -11,14 +11,23 @@ import (
 
 // Memory is only for local development. It is intentionally reset on process restart.
 type Memory struct {
-	mu    sync.Mutex
-	users map[string]int
-	tasks map[string]model.Task
-	keys  map[string]string
+	mu         sync.Mutex
+	users      map[string]int
+	tasks      map[string]model.Task
+	keys       map[string]string
+	identities map[string]string
+	states     map[string]OAuthState
+	profiles   map[string]model.UserProfile
+	pets       map[string]model.Pet
+	orders     map[string]model.Order
+	packages   map[string]model.Entitlement
+	orderKeys  map[string]string
+	spends     map[string]string
+	nextChecks map[string]time.Time
 }
 
 func NewMemory() *Memory {
-	return &Memory{users: map[string]int{}, tasks: map[string]model.Task{}, keys: map[string]string{}}
+	return &Memory{users: map[string]int{}, tasks: map[string]model.Task{}, keys: map[string]string{}, identities: map[string]string{}, states: map[string]OAuthState{}, profiles: map[string]model.UserProfile{}, pets: map[string]model.Pet{}, orders: map[string]model.Order{}, packages: map[string]model.Entitlement{}, orderKeys: map[string]string{}, spends: map[string]string{}, nextChecks: map[string]time.Time{}}
 }
 func (m *Memory) Close() {}
 func (m *Memory) EnsureUser(_ context.Context, id string, credits int) error {
@@ -36,6 +45,11 @@ func (m *Memory) Credits(_ context.Context, id string) (int, error) {
 	if !ok {
 		return 0, model.ErrNotFound
 	}
+	for _, pkg := range m.packages {
+		if pkg.UserID == id && pkg.StartsAt.Before(time.Now()) && pkg.ExpiresAt.After(time.Now()) {
+			v += pkg.Remaining
+		}
+	}
 	return v, nil
 }
 func (m *Memory) Reserve(_ context.Context, t model.Task, maxActive int) (model.Task, bool, error) {
@@ -52,6 +66,11 @@ func (m *Memory) Reserve(_ context.Context, t model.Task, maxActive int) (model.
 	if _, ok := m.users[t.UserID]; !ok {
 		return model.Task{}, false, model.ErrNotFound
 	}
+	if t.PetID != "" {
+		if pet, ok := m.pets[t.PetID]; !ok || pet.UserID != t.UserID {
+			return model.Task{}, false, model.ErrNotFound
+		}
+	}
 	active := 0
 	for _, old := range m.tasks {
 		if old.UserID == t.UserID && model.Active(old.Status) {
@@ -61,12 +80,13 @@ func (m *Memory) Reserve(_ context.Context, t model.Task, maxActive int) (model.
 	if active >= maxActive {
 		return model.Task{}, false, model.ErrActiveTask
 	}
-	if m.users[t.UserID] <= 0 {
-		return model.Task{}, false, model.ErrQuota
+	if err := m.spendLocked(t.ID, t.UserID); err != nil {
+		return model.Task{}, false, err
 	}
-	m.users[t.UserID]--
 	t.Status = model.Queued
-	t.CreatedAt = time.Now().UTC()
+	if t.CreatedAt.IsZero() {
+		t.CreatedAt = time.Now().UTC()
+	}
 	m.tasks[t.ID] = t
 	m.keys[key] = t.ID
 	return t, true, nil
@@ -79,6 +99,15 @@ func (m *Memory) Get(_ context.Context, id, user string) (model.Task, error) {
 		return model.Task{}, model.ErrNotFound
 	}
 	return t, nil
+}
+func (m *Memory) FindRequest(_ context.Context, user, key string) (model.Task, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	id, ok := m.keys[user+":"+key]
+	if !ok {
+		return model.Task{}, model.ErrNotFound
+	}
+	return m.tasks[id], nil
 }
 func (m *Memory) Claim(_ context.Context) (model.Task, error) {
 	m.mu.Lock()
@@ -133,9 +162,8 @@ func (m *Memory) Fail(_ context.Context, id, message string, uncertain bool, o m
 	t.Status = model.Failed
 	if uncertain {
 		t.Status = model.Uncertain
-	} else {
-		m.users[t.UserID]++
 	}
+	m.refundLocked(t.ID, t.UserID)
 	t.Error = message
 	t.FinishedAt = time.Now().UTC()
 	t.RequestID = o.RequestID
@@ -153,6 +181,7 @@ func (m *Memory) RecoverStale(_ context.Context, cutoff time.Time) error {
 			t.Error = "任务中断，供应商结果待核对"
 			t.FinishedAt = time.Now().UTC()
 			m.tasks[id] = t
+			m.refundLocked(t.ID, t.UserID)
 		}
 	}
 	return nil

@@ -38,7 +38,7 @@ func OriginCheck(allowed []string) gin.HandlerFunc {
 		origins[origin] = true
 	}
 	return func(c *gin.Context) {
-		if c.Request.Method == http.MethodPost {
+		if c.Request.Method != http.MethodGet && c.Request.Method != http.MethodHead && c.Request.Method != http.MethodOptions {
 			origin := c.GetHeader("Origin")
 			if origin != "" && !origins[origin] {
 				c.AbortWithStatusJSON(403, gin.H{"code": "ORIGIN_REJECTED", "message": "请求来源不被允许"})

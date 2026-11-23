@@ -1,0 +1,25 @@
+# Merge with the existing maohai-wechat.conf. Keep exactly one server block for
+# this domain on port 80. Other hosted websites and the IIS 8088 binding stay intact.
+server {
+    listen 80;
+    server_name maohai.aidistance.cn;
+
+    location = /MP_verify_vLwJDBbBPOQNjx84.txt {
+        proxy_pass http://127.0.0.1:8088;
+        proxy_set_header Host $host;
+    }
+
+    # IIS must already forward /api/* to the loopback Go service without stripping
+    # /api. This exposes the OAuth callback on the validated standard-port domain.
+    location ^~ /api/auth/wechat/ {
+        access_log off;
+        proxy_pass http://127.0.0.1:8088;
+        proxy_set_header Host $host;
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 30s;
+    }
+
+    location / {
+        return 404;
+    }
+}

@@ -1,0 +1,23 @@
+.pet-editor { margin-top: 22px; }
+.pet-editor fieldset { border: 0; min-width: 0; padding: 0; margin: 0; }
+.pet-editor label:not(.pet-checkbox), .pet-avatar-options legend { display: block; font-size: 13px; color: #786b5d; margin: 0 0 16px; }
+.pet-editor input:not([type=checkbox]):not([type=radio]), .pet-editor select, .pet-selector select { display: block; width: 100%; min-width: 0; min-height: 45px; border: 1px solid #e6dccf; border-radius: 10px; padding: 10px 12px; background: #fffcf8; color: var(--ink); font: inherit; font-size: 14px; margin-top: 8px; }
+.pet-required, .pet-optional { font-size: 11px; margin-left: 5px; color: #a99b88; }
+.pet-editor .pet-avatar-options { display: flex; gap: 10px; margin-bottom: 20px; }
+.pet-editor .pet-avatar-options legend { margin-bottom: 10px; }
+.pet-editor .pet-avatar-options label { position: relative; margin: 0; width: 56px; height: 52px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 12px; background: #faf7f1; font-size: 27px; }
+.pet-avatar-options input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.pet-avatar-options label.is-selected { border-color: var(--brand); background: var(--brand-pale); }
+.pet-avatar-options label:has(:focus-visible) { outline: 3px solid #c85f38; outline-offset: 3px; }
+.pet-checkbox { display: flex; align-items: center; gap: 8px; font-size: 12px; line-height: 1.7; color: #8b7862; margin: 14px 0; }
+.pet-checkbox input { accent-color: var(--brand); width: 17px; height: 17px; flex-shrink: 0; }
+.pet-age-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.pet-field-hint { color: #9b8a76; font-size: 11px; line-height: 1.8; margin: 10px 0 0; }
+.pet-editor .pet-field-hint { margin: -4px 0 18px; }
+.pet-selector { padding: 16px; margin-bottom: 25px; background: #fffaf3; border: 1px solid #f0e1cf; border-radius: 14px; }
+.pet-selector-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; }
+.pet-selector-title strong { display: flex; align-items: center; gap: 6px; color: #8b6846; font-weight: 600; }
+.pet-selector-title a { color: #a17c59; text-decoration: underline; text-underline-offset: 3px; padding: 5px 0; }
+.pet-selector .pet-checkbox { margin: 12px 0 0; }
+.pet-selector select { background: white; font-size: 12px; }
+.pet-continue { border: 0; border-radius: 8px; padding: 9px 0; background: none; font-size: 12px; color: #a17c59; text-decoration: underline; text-underline-offset: 3px; }

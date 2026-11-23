@@ -45,3 +45,30 @@ func TestRejectInvalidImages(t *testing.T) {
 		t.Fatal("real generation allowed a font with no Chinese glyphs")
 	}
 }
+
+func TestPetCaptionIsDrawnInsideSquareResult(t *testing.T) {
+	var source bytes.Buffer
+	_ = png.Encode(&source, image.NewRGBA(image.Rect(0, 0, 256, 256)))
+	renderer, err := NewRenderer("", 512, "demo", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	plain, err := renderer.Render(source.Bytes())
+	if err != nil {
+		t.Fatal(err)
+	}
+	captioned, err := renderer.RenderWithCaption(source.Bytes(), "Milo - 2026.11.19")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Equal(plain, captioned) {
+		t.Fatal("caption did not affect output image")
+	}
+	cfg, err := jpeg.DecodeConfig(bytes.NewReader(captioned))
+	if err != nil || cfg.Width != 512 || cfg.Height != 512 {
+		t.Fatal("caption changed output dimensions")
+	}
+	if _, err = renderer.RenderWithCaption(source.Bytes(), "奶茶"); err == nil {
+		t.Fatal("missing glyphs were silently rendered")
+	}
+}

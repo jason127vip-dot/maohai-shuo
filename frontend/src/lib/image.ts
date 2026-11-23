@@ -43,7 +43,7 @@ export async function preparePhoto(file: File): Promise<SelectedPhoto> {
 }
 
 /** Mock-only preview: original image with explicit demo labels, never an AI result. */
-export async function createDemoImage(photo: File): Promise<string> {
+export async function createDemoImage(photo: File, caption = ''): Promise<string> {
   const url = URL.createObjectURL(photo)
   try {
     const image = await loadImage(url)
@@ -54,10 +54,12 @@ export async function createDemoImage(photo: File): Promise<string> {
     if (!ctx) throw new Error('图片预览失败，请稍后重试。')
     ctx.fillStyle = '#f7f0e5'
     ctx.fillRect(0, 0, 1024, 1024)
-    const scale = Math.min(936 / image.naturalWidth, 820 / image.naturalHeight)
+    const imageHeight = caption ? 770 : 820
+    const scale = Math.min(936 / image.naturalWidth, imageHeight / image.naturalHeight)
     const width = image.naturalWidth * scale
     const height = image.naturalHeight * scale
-    ctx.drawImage(image, (1024 - width) / 2, 40 + (820 - height) / 2, width, height)
+    ctx.drawImage(image, (1024 - width) / 2, 40 + (imageHeight - height) / 2, width, height)
+    if (caption) { ctx.fillStyle = '#745538'; ctx.font = '28px sans-serif'; ctx.fillText(caption, 44, 866, 936) }
     ctx.fillStyle = '#4b3e35'
     ctx.font = 'bold 30px sans-serif'
     ctx.fillText('流程预览 · 原图展示，非 AI 成品', 44, 925)

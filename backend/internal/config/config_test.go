@@ -44,3 +44,45 @@ func TestConfigErrorsDoNotEchoSecrets(t *testing.T) {
 		t.Fatal("invalid config exposed value or was accepted")
 	}
 }
+
+func TestWechatConfigurationRequiresPersistentIdentityAndFixedOrigins(t *testing.T) {
+	base, _, err := Load(filepath.Join("..", "..", "configs", "config.example.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	base.Server.Environment = "production"
+	base.Auth.Mode = "wechat"
+	base.Auth.SigningKey = "a-unique-production-signing-key-with-32-bytes"
+	base.Database.Driver = "postgres"
+	base.Database.URL = "postgresql://example.invalid/db?sslmode=require"
+	base.Wechat.AppID = "wx0123456789abcdef"
+	base.Wechat.AppSecret = "test-secret"
+	base.Wechat.CallbackURL = "http://maohai.test/api/auth/wechat/callback"
+	base.Wechat.FrontendURL = "http://maohai.test:8088"
+	base.Server.AllowedOrigins = []string{base.Wechat.FrontendURL}
+	if err = base.Validate(); err != nil {
+		t.Fatal("valid HTTP80 callback rejected", err)
+	}
+	for _, test := range []struct {
+		name   string
+		change func(*Config)
+	}{
+		{"memory", func(c *Config) { c.Database.Driver = "memory" }},
+		{"missing-secret", func(c *Config) { c.Wechat.AppSecret = "" }},
+		{"callback-8088", func(c *Config) { c.Wechat.CallbackURL = "http://maohai.test:8088/api/auth/wechat/callback" }},
+		{"callback-query", func(c *Config) { c.Wechat.CallbackURL += "?secret=unsafe" }},
+		{"wrong-host", func(c *Config) { c.Wechat.FrontendURL = "http://evil.test" }},
+		{"scheme-mismatch", func(c *Config) { c.Wechat.FrontendURL = "https://maohai.test" }},
+		{"unknown-origin", func(c *Config) { c.Server.AllowedOrigins = nil }},
+		{"development-key", func(c *Config) { c.Auth.SigningKey = "local-development-key-change-before-sharing" }},
+		{"bad-cookie", func(c *Config) { c.Auth.CookieName = "bad;cookie" }},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			cfg := base
+			test.change(&cfg)
+			if cfg.Validate() == nil {
+				t.Fatal("unsafe configuration accepted")
+			}
+		})
+	}
+}

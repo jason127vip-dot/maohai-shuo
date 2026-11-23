@@ -81,6 +81,21 @@ func NewRenderer(fontPath string, size int, brand string, demo bool) (*Renderer,
 	return &Renderer{parsed, size, brand, demo}, nil
 }
 func (r *Renderer) Render(data []byte) ([]byte, error) {
+	return r.RenderWithCaption(data, "")
+}
+func (r *Renderer) ValidateCaption(caption string) error {
+	for _, ch := range caption {
+		glyph, err := r.font.GlyphIndex(nil, ch)
+		if err != nil || glyph == 0 {
+			return errors.New("当前字体不支持宠物名字或年龄中的部分文字，请关闭文字显示或联系管理员更换字体")
+		}
+	}
+	return nil
+}
+func (r *Renderer) RenderWithCaption(data []byte, caption string) ([]byte, error) {
+	if err := r.ValidateCaption(caption); err != nil {
+		return nil, err
+	}
 	cfg, _, err := image.DecodeConfig(bytes.NewReader(data))
 	if err != nil || cfg.Width < 1 || cfg.Height < 1 || int64(cfg.Width)*int64(cfg.Height) > 40000000 {
 		return nil, errors.New("模型返回图片无效")
@@ -93,6 +108,9 @@ func (r *Renderer) Render(data []byte) ([]byte, error) {
 	draw.Draw(canvas, canvas.Bounds(), image.NewUniform(color.RGBA{255, 251, 244, 255}), image.Point{}, draw.Src)
 	margin := r.size / 40
 	band := r.size / 14
+	if caption != "" {
+		band = r.size / 7
+	}
 	available := r.size - margin*2 - band
 	width, height := cfg.Width, cfg.Height
 	if width >= height {
@@ -122,6 +140,26 @@ func (r *Renderer) Render(data []byte) ([]byte, error) {
 	x := max(margin, r.size-margin-widthText)
 	drawer.Dot = fixed.P(x, r.size-margin)
 	drawer.DrawString(label)
+	if caption != "" {
+		captionSize := float64(r.size) / 38
+		captionFace, err := opentype.NewFace(r.font, &opentype.FaceOptions{Size: captionSize, DPI: 72, Hinting: font.HintingFull})
+		if err != nil {
+			return nil, err
+		}
+		captionDrawer := font.Drawer{Dst: canvas, Src: image.NewUniform(color.RGBA{95, 65, 45, 255}), Face: captionFace}
+		measured := captionDrawer.MeasureString(caption).Ceil()
+		if measured > r.size-2*margin {
+			captionFace.Close()
+			captionFace, err = opentype.NewFace(r.font, &opentype.FaceOptions{Size: captionSize * float64(r.size-2*margin) / float64(measured), DPI: 72, Hinting: font.HintingFull})
+			if err != nil {
+				return nil, err
+			}
+			captionDrawer.Face = captionFace
+		}
+		captionDrawer.Dot = fixed.P(margin, r.size-margin-band/2)
+		captionDrawer.DrawString(caption)
+		captionFace.Close()
+	}
 	var out bytes.Buffer
 	if jpeg.Encode(&out, canvas, &jpeg.Options{Quality: 92}) != nil {
 		return nil, errors.New("成品图片编码失败")

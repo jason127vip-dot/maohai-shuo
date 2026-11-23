@@ -1,0 +1,23 @@
+# Copy to payment.local.yaml; paths are relative to that file. Never commit real secrets.
+enabled: false # Enable only after HTTPS, JSAPI permission, AppID binding and migration 005.
+mch_id: ""
+certificate_serial: ""
+merchant_certificate_path: "payment/apiclient_cert.pem"
+private_key_path: "payment/apiclient_key.pem"
+api_v3_key: "" # 32 ASCII letters/digits; server-side only. APIv2 key is not used.
+public_key_id: ""
+public_key_path: "payment/pub_key.pem"
+notify_url: "" # https://YOUR_DOMAIN/api/payments/wechat/notify
+order_minutes: 15
+http_timeout_seconds: 10
+plans:
+  - id: month
+    name: 月卡
+    amount_fen: 480
+    credits: 4
+    months: 1
+  - id: year
+    name: 年卡
+    amount_fen: 5800
+    credits: 48
+    months: 12

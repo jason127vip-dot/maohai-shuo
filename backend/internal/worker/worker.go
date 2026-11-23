@@ -94,14 +94,14 @@ func (p *Pool) Process(ctx context.Context, task model.Task) {
 		}
 		message := "图片生成失败，本次额度已退回，请稍后再试"
 		if uncertain {
-			message = "模型调用结果待核对，请勿重复生成"
+			message = "模型调用结果待核对，本次次数已退回原账户或套餐"
 		} else if failure != nil && failure.Code == provider.CodeInsufficientBalance {
 			message = "AI 服务账户余额不足，请联系管理员充值后再试，本次额度已退回"
 		}
 		p.recordFailure(task, message, uncertain, outcome)
 		return
 	}
-	image, err := p.Renderer.Render(result.Image)
+	image, err := p.Renderer.RenderWithCaption(result.Image, task.PetCaption())
 	if err != nil {
 		p.recordFailure(task, "模型已返回，成品加工失败，请联系管理员核对", true, outcome)
 		return

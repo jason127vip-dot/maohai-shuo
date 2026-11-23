@@ -30,10 +30,13 @@ export function ResultPage() {
             <span className="eyebrow"><span /> 毛孩的小剧场</span>
             <h1>{task.isMock ? '流程跑通啦，可爱就位' : '这份可爱，属于你'}</h1>
             <p className="result-subtitle">{scene?.title} <span>×</span> {style?.title}</p>
+            {task.petName && <p className="result-pet">{task.petName}{task.petAge ? ` · ${task.petAge}` : ''}</p>}
             <button className="result-image-button" onClick={() => setShowImage(true)} type="button" aria-label="查看大图"><img src={task.imageUrl} alt={task.isMock ? '模拟结果：上传的原图和演示标识，非 AI 生成成品' : '生成的宠物表情图'} /><span><Expand size={14} /> 查看大图</span></button>
             {task.isMock && <p className="mock-result-note">这是原图的流程预览，未经过 AI 改图，也没有产生模型费用。</p>}
             <Button className="result-save" onClick={() => setShowImage(true)}><Download size={18} /> 保存这份可爱</Button>
             <Link className="text-link" to="/" onClick={startNextCreation}>再做一张 <ArrowRight size={15} /></Link>
+            <Link className="text-link" to="/history">查看我的作品 <ArrowRight size={15} /></Link>
+            <Link className="text-link" to={task.petId ? `/growth?pet=${encodeURIComponent(task.petId)}` : '/growth?pet=unassigned'}>查看成长轨迹 <ArrowRight size={15} /></Link>
           </>
         ) : <GenerationStatus task={task} />}
       </section>

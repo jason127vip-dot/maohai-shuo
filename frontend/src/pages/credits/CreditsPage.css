@@ -1,0 +1,78 @@
+.credits-page { max-width: 900px; margin: 0 auto; padding: 30px 30px 50px; }
+.credits-heading { text-align: center; margin: 4px 0 28px; }
+.credits-paw { display: grid; place-items: center; width: 62px; height: 62px; margin: 0 auto 18px; border: 1px solid #f5dfcf; border-radius: 22px; color: var(--brand); background: var(--brand-pale); transform: rotate(-6deg); }
+.credits-heading h1 { margin: 12px 0; font-size: clamp(25px, 4vw, 34px); letter-spacing: -.7px; }
+.credits-heading > p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.8; }
+.credits-balance { display: flex; align-items: center; gap: 13px; padding: 18px 22px; margin-bottom: 24px; border-radius: 15px; background: #f5efe5; color: #967552; }
+.credits-balance > svg { flex-shrink: 0; }
+.credits-balance > div { flex: 1; min-width: 0; }
+.credits-balance strong, .credits-balance span { display: block; line-height: 1.7; }
+.credits-balance strong { color: var(--ink); font-size: 14px; }
+.credits-balance span { font-size: 12px; overflow-wrap: anywhere; }
+.credits-balance button { border: 0; background: none; flex-shrink: 0; }
+.credits-shop { padding: 28px; border: 1px solid var(--border); border-radius: 22px; background: var(--surface); }
+.credits-shop h2 { font-size: 18px; margin: 0 0 20px; }
+.credits-plans { padding: 0; margin: 0; border: 0; min-width: 0; display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.credits-plan input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.credits-plan:has(:focus-visible) { outline: 3px solid #c85f38; outline-offset: 3px; }
+.credits-plan { position: relative; display: flex; flex-direction: column; border: 1px solid #e9e1d7; border-radius: 14px; padding: 20px 17px; }
+.credits-plan.is-selected { border-color: var(--brand); background: #fff8f3; box-shadow: inset 0 0 0 1px var(--brand); }
+.credits-plan-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.credits-plan-top > strong { font-size: 17px; }
+.credits-plan-check { width: 19px; height: 19px; display: grid; place-items: center; border: 1px solid #ddd3c6; border-radius: 50%; }
+.is-selected .credits-plan-check { background: var(--brand); border-color: var(--brand); color: white; }
+.credits-price { display: flex; align-items: baseline; gap: 3px; font-size: 38px; font-weight: 750; margin: 22px 0 16px; color: #704831; }
+.credits-price > span { font-size: 19px; }
+.credits-price small { color: #8d7d6b; font-size: 12px; font-weight: 400; margin-left: 3px; }
+.credits-allowance { display: flex; align-items: center; gap: 7px; font-size: 15px; color: #9b6544; }
+.credits-allowance strong { font-weight: 600; }
+.credits-validity { display: flex; align-items: center; gap: 5px; margin-top: 10px; font-size: 12px; color: #8d7d6b; }
+.credits-validity svg { flex-shrink: 0; }
+.credits-plan-description { font-size: 11px; color: #918475; line-height: 1.8; margin-top: 10px; }
+.credits-checkout { border-top: 1px dashed #e8dfd4; margin-top: 24px; padding-top: 22px; }
+.credits-order { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.credits-order > div > span, .credits-order > div > strong, .credits-order > div > small { display: block; }
+.credits-order > div > span { font-size: 11px; color: var(--muted); }
+.credits-order > div > strong { font-size: 17px; margin: 6px 0; }
+.credits-order > div > small { font-size: 12px; color: #967757; line-height: 1.7; }
+.credits-total { font-size: 29px; color: #975c39; white-space: nowrap; }
+.credits-total small { font-size: 16px; margin-right: 3px; }
+.credits-buy { width: 100%; min-height: 49px; }
+.credits-buy:disabled { color: #8b6149; background: #f4e5d8; }
+.credits-payment-note { text-align: center; color: #938574; font-size: 12px; line-height: 1.7; margin: 12px 0 0; }
+.credits-guide { margin: 30px 6px 12px; }
+.credits-guide h2 { font-size: 17px; margin: 0 0 20px; }
+.credits-guide > div { display: flex; align-items: flex-start; gap: 12px; margin-top: 17px; color: #aa8762; }
+.credits-guide p { margin: 0; }
+.credits-guide strong, .credits-guide p > span { display: block; font-size: 13px; line-height: 1.8; }
+.credits-guide strong { color: #6c5b48; font-weight: 550; }
+.credits-guide p > span { color: var(--muted); font-size: 12px; margin-top: 3px; }
+.credits-history { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 20px; font-size: 12px; color: #a17c59; }
+@media(max-width: 700px) {
+  .credits-page { padding: 24px 20px 35px; }
+  .credits-shop { padding: 20px 16px; }
+  .credits-plans { grid-template-columns: 1fr; gap: 10px; }
+  .credits-plan { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 10px; padding: 17px; }
+  .credits-plan-top { grid-column: 1; justify-content: flex-start; }
+  .credits-plan-check { order: -1; }
+  .credits-price { grid-column: 2; grid-row: 1 / 5; align-self: center; margin: 0; font-size: 30px; }
+  .credits-allowance { grid-column: 1; margin-top: 12px; font-size: 13px; }
+  .credits-validity { grid-column: 1; font-size: 11px; margin-top: 7px; }
+  .credits-plan-description { grid-column: 1; margin-top: 5px; }
+  .credits-balance { padding: 16px; }
+  .credits-total { font-size: 25px; }
+}
+
+.credits-payment-status { margin: 16px 0 0; padding: 13px; background: #f5efe5; border-radius: 10px; font-size: 13px; line-height: 1.8; overflow-wrap: anywhere; }
+.credits-owned { margin-top: 26px; padding: 22px; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); }
+.credits-owned h2 { font-size: 17px; margin: 0 0 16px; }
+.credits-owned h2:not(:first-child) { margin-top: 25px; }
+.credits-owned > p { font-size: 13px; line-height: 1.8; color: var(--muted); }
+.credits-owned article { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 0; border-top: 1px solid var(--border); font-size: 13px; }
+.credits-owned article > div { min-width: 0; }
+.credits-owned article strong, .credits-owned article span { display: block; line-height: 1.8; overflow-wrap: anywhere; }
+.credits-owned article span { font-size: 11px; color: var(--muted); }
+.credits-order-actions { display: flex; flex-wrap: wrap; gap: 8px; flex-shrink: 0; }
+.credits-order-actions button { border: 1px solid var(--border); border-radius: 7px; background: #fff8f3; padding: 8px 10px; color: #8b6149; font: inherit; cursor: pointer; }
+.credits-order-actions button:disabled { opacity: .5; cursor: default; }
+@media(max-width: 700px) { .credits-owned { padding: 16px; } .credits-owned .credits-payment-order { align-items: flex-start; flex-direction: column; } }

@@ -16,7 +16,7 @@ database:
   max_connections: 5
 
 auth:
-  mode: development # WeChat OAuth is a later integration; production fails closed.
+  mode: development # development only locally; wechat requires PostgreSQL and credentials.
   cookie_name: maohai_session
   signing_key: local-development-key-change-before-sharing
   session_hours: 24
@@ -24,7 +24,8 @@ auth:
 wechat:
   app_id: ""
   app_secret: ""
-  callback_url: ""
+  callback_url: "" # Standard-port URL ending in /api/auth/wechat/callback
+  frontend_url: "" # H5 origin; same scheme and hostname as callback (port may differ).
 
 ai:
   provider: demo # Set doubao only when deliberately testing paid image generation.
@@ -51,7 +52,8 @@ storage:
   input_max_edge: 2048
   output_size: 1024
   original_retention_seconds: 3600
-  # Required for real AI results. See fonts/README.md. Not needed for demo mode.
+  # Required for real AI results and Chinese pet captions (including demo mode).
+  # See fonts/README.md. Without it, demo output only supports the built-in Latin font.
   font_path: ""
   brand_text: 毛孩儿说
 
@@ -61,3 +63,30 @@ quota:
   max_active_tasks_per_user: 1
 
 prompts_file: prompts.yaml
+
+# Payment settings can alternatively live in an ignored sidecar YAML.
+# Set payment_file: "payment.local.yaml" and leave payment.enabled=false/mch_id empty here.
+payment_file: ""
+payment:
+  enabled: false # Enable only after HTTPS, JSAPI permission, AppID binding and migration 005.
+  mch_id: ""
+  certificate_serial: ""
+  merchant_certificate_path: "payment/apiclient_cert.pem"
+  private_key_path: "payment/apiclient_key.pem"
+  api_v3_key: "" # 32 ASCII letters/digits; server-side only. APIv2 key is not used.
+  public_key_id: ""
+  public_key_path: "payment/pub_key.pem"
+  notify_url: "" # https://YOUR_DOMAIN/api/payments/wechat/notify
+  order_minutes: 15
+  http_timeout_seconds: 10
+  plans:
+    - id: month
+      name: 月卡
+      amount_fen: 480
+      credits: 4
+      months: 1
+    - id: year
+      name: 年卡
+      amount_fen: 5800
+      credits: 48
+      months: 12

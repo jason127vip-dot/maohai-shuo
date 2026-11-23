@@ -106,7 +106,7 @@ func TestWorkerQuotaAndOriginalLifecycle(t *testing.T) {
 			if saved.Status != expected || generator.calls != 1 {
 				t.Fatalf("status=%s calls=%d", saved.Status, generator.calls)
 			}
-			if kind == "definite" && credits != 2 || kind != "definite" && credits != 1 {
+			if kind == "success" && credits != 1 || kind != "success" && credits != 2 {
 				t.Fatalf("credits=%d", credits)
 			}
 			_, originalErr := files.ReadOriginal(id)
@@ -163,7 +163,7 @@ func TestBalanceHintAndRefundSemantics(t *testing.T) {
 	}{
 		{"billing", provider.CodeInsufficientBalance, "AccountOverdueError", "AI 服务账户余额不足，请联系管理员充值后再试，本次额度已退回", false, 2},
 		{"usage cap", "PROVIDER_HTTP_ERROR", "SetLimitExceeded", "图片生成失败，本次额度已退回，请稍后再试", false, 2},
-		{"uncertain overrides billing hint", provider.CodeInsufficientBalance, "AccountOverdueError", "模型调用结果待核对，请勿重复生成", true, 1},
+		{"uncertain overrides billing hint", provider.CodeInsufficientBalance, "AccountOverdueError", "模型调用结果待核对，本次次数已退回原账户或套餐", true, 2},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := context.Background()
